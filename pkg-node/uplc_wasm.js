@@ -51,15 +51,6 @@ function takeObject(idx) {
     return ret;
 }
 
-let WASM_VECTOR_LEN = 0;
-
-function passArray8ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 1, 1) >>> 0;
-    getUint8ArrayMemory0().set(arg, ptr / 1);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-
 let cachedDataViewMemory0 = null;
 
 function getDataViewMemory0() {
@@ -69,14 +60,11 @@ function getDataViewMemory0() {
     return cachedDataViewMemory0;
 }
 
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    const mem = getDataViewMemory0();
-    for (let i = 0; i < array.length; i++) {
-        mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
     }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
+    return instance.ptr;
 }
 
 function getArrayJsValueFromWasm0(ptr, len) {
@@ -88,6 +76,25 @@ function getArrayJsValueFromWasm0(ptr, len) {
     }
     return result;
 }
+
+let WASM_VECTOR_LEN = 0;
+
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayJsValueToWasm0(array, malloc) {
+    const ptr = malloc(array.length * 4, 4) >>> 0;
+    const mem = getDataViewMemory0();
+    for (let i = 0; i < array.length; i++) {
+        mem.setUint32(ptr + 4 * i, addHeapObject(array[i]), true);
+    }
+    WASM_VECTOR_LEN = array.length;
+    return ptr;
+}
 /**
 * @param {Uint8Array} tx_bytes
 * @param {(Uint8Array)[]} utxos_refs_bytes
@@ -98,7 +105,7 @@ function getArrayJsValueFromWasm0(ptr, len) {
 * @param {bigint} slot_config_zero_time
 * @param {bigint} slot_config_zero_slot
 * @param {number} slot_config_slot_length
-* @returns {(Uint8Array)[]}
+* @returns {(JsEvalResult)[]}
 */
 module.exports.eval_phase_two_raw = function(tx_bytes, utxos_refs_bytes, utxos_outputs_bytes, cost_mdls_bytes, cpu_budget, mem_budget, slot_config_zero_time, slot_config_zero_slot, slot_config_slot_length) {
     try {
@@ -159,8 +166,222 @@ module.exports.apply_params_to_script = function(params_bytes, plutus_script_byt
     }
 };
 
+const JsEvalResultFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_jsevalresult_free(ptr >>> 0, 1));
+/**
+*/
+class JsEvalResult {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(JsEvalResult.prototype);
+        obj.__wbg_ptr = ptr;
+        JsEvalResultFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        JsEvalResultFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_jsevalresult_free(ptr, 0);
+    }
+    /**
+    * @returns {JsExBudget}
+    */
+    get remaining_budget() {
+        const ret = wasm.__wbg_get_jsevalresult_remaining_budget(this.__wbg_ptr);
+        return JsExBudget.__wrap(ret);
+    }
+    /**
+    * @param {JsExBudget} arg0
+    */
+    set remaining_budget(arg0) {
+        _assertClass(arg0, JsExBudget);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_jsevalresult_remaining_budget(this.__wbg_ptr, ptr0);
+    }
+    /**
+    * @returns {JsExBudget}
+    */
+    get initial_budget() {
+        const ret = wasm.__wbg_get_jsevalresult_initial_budget(this.__wbg_ptr);
+        return JsExBudget.__wrap(ret);
+    }
+    /**
+    * @param {JsExBudget} arg0
+    */
+    set initial_budget(arg0) {
+        _assertClass(arg0, JsExBudget);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_jsevalresult_initial_budget(this.__wbg_ptr, ptr0);
+    }
+    /**
+    * @returns {(JsTrace)[]}
+    */
+    get traces() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.jsevalresult_traces(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v1 = getArrayJsValueFromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4, 4);
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    get redeemer() {
+        const ret = wasm.jsevalresult_redeemer(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+}
+module.exports.JsEvalResult = JsEvalResult;
+
+const JsExBudgetFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_jsexbudget_free(ptr >>> 0, 1));
+/**
+*/
+class JsExBudget {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(JsExBudget.prototype);
+        obj.__wbg_ptr = ptr;
+        JsExBudgetFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        JsExBudgetFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_jsexbudget_free(ptr, 0);
+    }
+    /**
+    * @returns {bigint}
+    */
+    get cpu() {
+        const ret = wasm.__wbg_get_jsexbudget_cpu(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+    * @param {bigint} arg0
+    */
+    set cpu(arg0) {
+        wasm.__wbg_set_jsexbudget_cpu(this.__wbg_ptr, arg0);
+    }
+    /**
+    * @returns {bigint}
+    */
+    get mem() {
+        const ret = wasm.__wbg_get_jsexbudget_mem(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+    * @param {bigint} arg0
+    */
+    set mem(arg0) {
+        wasm.__wbg_set_jsexbudget_mem(this.__wbg_ptr, arg0);
+    }
+}
+module.exports.JsExBudget = JsExBudget;
+
+const JsTraceFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_jstrace_free(ptr >>> 0, 1));
+/**
+*/
+class JsTrace {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(JsTrace.prototype);
+        obj.__wbg_ptr = ptr;
+        JsTraceFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        JsTraceFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_jstrace_free(ptr, 0);
+    }
+    /**
+    * @returns {string}
+    */
+    get kind() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.jstrace_kind(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+    * @returns {string}
+    */
+    get value() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.jstrace_value(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+}
+module.exports.JsTrace = JsTrace;
+
 module.exports.__wbindgen_string_new = function(arg0, arg1) {
     const ret = getStringFromWasm0(arg0, arg1);
+    return addHeapObject(ret);
+};
+
+module.exports.__wbg_jstrace_new = function(arg0) {
+    const ret = JsTrace.__wrap(arg0);
+    return addHeapObject(ret);
+};
+
+module.exports.__wbindgen_object_clone_ref = function(arg0) {
+    const ret = getObject(arg0);
     return addHeapObject(ret);
 };
 
@@ -181,6 +402,11 @@ module.exports.__wbg_newwithbyteoffsetandlength_8a2cb9ca96b27ec9 = function(arg0
 
 module.exports.__wbg_new_ea1883e1e5e86686 = function(arg0) {
     const ret = new Uint8Array(getObject(arg0));
+    return addHeapObject(ret);
+};
+
+module.exports.__wbg_jsevalresult_new = function(arg0) {
+    const ret = JsEvalResult.__wrap(arg0);
     return addHeapObject(ret);
 };
 
