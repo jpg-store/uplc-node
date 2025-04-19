@@ -1,6 +1,9 @@
-use js_sys;
+use js_sys::{self};
 use uplc::tx;
 use wasm_bindgen::prelude::*;
+
+mod js_types;
+use js_types::*;
 
 // Use `wee_alloc` as the global allocator.
 #[global_allocator]
@@ -17,7 +20,7 @@ pub fn eval_phase_two_raw(
     slot_config_zero_time: u64,
     slot_config_zero_slot: u64,
     slot_config_slot_length: u32,
-) -> Result<Vec<js_sys::Uint8Array>, JsValue> {
+) -> Result<Vec<JsEvalResult>, JsValue> {
     let utxos_bytes = utxos_refs_bytes
         .into_iter()
         .zip(utxos_outputs_bytes.into_iter())
@@ -36,8 +39,8 @@ pub fn eval_phase_two_raw(
         false,
         |_| (),
     )
-    .map(|r| r.iter().map(|i| js_sys::Uint8Array::from(&i[..])).collect())
-    .map_err(|e| e.to_string().into());
+    .map(|results| results.iter().map(Into::into).collect())
+    .map_err(|e| e.to_string().into()); // TODO: rich error type
 }
 
 #[wasm_bindgen]
